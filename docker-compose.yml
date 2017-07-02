@@ -1,0 +1,64 @@
+version: '3'
+
+volumes:
+  www-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /Users/phaneendra/work/dockerfiles/data
+  nginx-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /Users/phaneendra/work/dockerfiles/nginx
+  logs-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /Users/phaneendra/work/dockerfiles/logs
+
+services:
+  dns:
+    container_name: dns
+    image: 'andyshinn/dnsmasq'
+    restart: 'always'
+    ports:
+      - "53535:53/tcp"
+      - "53535:53/udp"
+    cap_add:
+      - NET_ADMIN
+    command: ["--address=/dev/127.0.0.1"]
+
+  dockergen:
+    container_name: dockergen
+    image: jwilder/docker-gen
+    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/sites-enabled/default.conf
+    volumes:
+      - nginx-volume:/etc/nginx
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/template/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+
+  web:
+    container_name: web
+    image: nginx:alpine
+    restart: 'always'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx-volume:/etc/nginx
+      - logs-volume:/logs
+      - www-volume:/usr/share/nginx/html
+    command: "nginx -g 'daemon off;'"
+    depends_on:
+      - dockergen
+  
+  whoami:
+    image: jwilder/whoami
+    environment:
+      - VIRTUAL_HOST=whoami.dev
+    depends_on:
+      - dockergen
