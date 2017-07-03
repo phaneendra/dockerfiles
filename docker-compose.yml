@@ -6,7 +6,13 @@ volumes:
     driver_opts:
       o: bind
       type: none
-      device: /Users/phaneendra/work/dockerfiles/data
+      device: /Users/phaneendra/work/dockerfiles/data/www
+  jboss-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /Users/phaneendra/work/dockerfiles/data/jboss
   nginx-volume:
     driver: local
     driver_opts:
@@ -35,7 +41,7 @@ services:
   dockergen:
     container_name: dockergen
     image: jwilder/docker-gen
-    command: -notify-sighup nginx -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/sites-enabled/default.conf
+    command: -notify-sighup web -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/sites-enabled/default.conf
     volumes:
       - nginx-volume:/etc/nginx
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -55,7 +61,21 @@ services:
     command: "nginx -g 'daemon off;'"
     depends_on:
       - dockergen
-  
+
+  jboss:
+    container_name: jboss
+    build: ./jboss
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    environment:
+      - VIRTUAL_HOST=jboss.dev
+    volumes:
+      - jboss-volume:/opt/jboss/standalone/deployments
+      - logs-volume:/logs
+    depends_on:
+      - web
+
   whoami:
     image: jwilder/whoami
     environment:

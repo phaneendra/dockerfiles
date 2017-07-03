@@ -20,9 +20,14 @@ collection of dockerfiles for development
 - mysql
 - postgres
 
-Most of this project assumes an OS X install, and Docker for Mac beta, but could be easily translated to other operating systems, and for Docker Machine users one of the few differences would be on the IP address of the VM (as in requires IP address instead of localhost).
+Most of this project assumes an OS X install, and Docker for Mac, but could be easily translated to other operating systems, and for Docker Machine users one of the few differences would be on the IP address of the VM (as in requires IP address instead of localhost).
 
-What we cover: 
+In Docker for Mac, the Docker team has swapped out Virtualbox for the xhyve hypervisor (👏👏👏). xhyve runs Alpine linux, which runs the Docker host. So the Docker client running in OS X communicates with the Docker host on Alpine. This stack has a few key advantages over the Docker Original stack:
+
+Access containers using localhost, rather than the VM IP address
+xhyve runs entirely in user space and has access to the host file system so tools like nodemon and watchman behave they same way they do natively
+
+What we cover:
 - Accessing our apps using a .dev TLD.
 - Avoiding port collisions.
 - Serving static files.
@@ -41,7 +46,7 @@ We need to able to resolve anything that ends in .dev to a specific address, the
 We're going to run a small DNS server for that purpose, using that particular feature from dnsmasq. And we're going to run it through Docker so we'll not mess with our host.
 
 ```
-docker run -d \  
+docker run -d \
   --name dnsmasq \
   --restart always \
   -p 53535:53/tcp \
@@ -60,7 +65,7 @@ Now we have a dumb DNS server that resolves anything ending in .dev to 127.0.0.1
 We're going to create a file under `/etc/resolver/` called `dev` (notice it unsurprisingly matches our TLD), containing the following:
 
 ```
-nameserver 127.0.0.1  
+nameserver 127.0.0.1
 port 53535
 ```
 
@@ -70,10 +75,10 @@ With those changes in place, we need to test it, it never hurts. OS X is a bit w
 
 ```
 $ nslookup anything.dev
-Server:         192.168.0.1  
+Server:         192.168.0.1
 Address:        192.168.0.1#53
 
-Name:   anything.dev  
+Name:   anything.dev
 Address: 127.0.53.53
 ```
 
@@ -81,8 +86,8 @@ Instead, we'll ping it:
 
 ```
 $ ping -c1 anything.dev
-PING anything.dev (127.0.0.1): 56 data bytes  
-64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.043 ms 
+PING anything.dev (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.043 ms
 ```
 
 # Avoiding port collisions.
