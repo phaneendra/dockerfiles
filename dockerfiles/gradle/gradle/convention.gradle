@@ -1,0 +1,11 @@
+apply plugin: 'java' // Plugin as major conventions, overwrites status
+
+apply plugin: 'nebula.project' // <2>
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// Generate wrapper, which is distributed as part of source to alleviate the need of installing gradle
+task createWrapper(type: Wrapper) {
+  gradleVersion = '3.5'
+}

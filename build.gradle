@@ -1,0 +1,174 @@
+
+buildscript {
+  ext {
+    springBootVersion = '1.3.2.RELEASE'
+  }
+  repositories {
+    mavenCentral()
+  }
+  apply from: file('gradle/buildscript.gradle'), to: buildscript
+}
+
+// invoke the plugin
+apply plugin: 'application'
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'groovy'
+apply plugin: 'pl.softmate.gradle-properties-yaml-plugin'
+
+// Establish version and status
+group = "com.${rootProject.name}"
+
+project.group = nexusGroup
+project.description = "${rootProject.name}"
+
+//Maven Repo
+repositories {
+  mavenCentral()
+}
+
+//Project dependencies from Maven Repo
+dependencies {
+  compileOnly group: 'org.jasypt', name: 'jasypt', version: '1.9.0'
+  compileOnly group: 'org.jasypt', name: 'jasypt-hibernate3', version: '1.9.0'
+}
+
+apply from: file('gradle/convention.gradle')
+apply from: file('gradle/check.gradle')
+apply from: file('gradle/license.gradle')
+apply from: file('gradle/release.gradle')
+
+import org.yaml.snakeyaml.Yaml
+import com.esotericsoftware.yamlbeans.YamlConfig
+import com.esotericsoftware.yamlbeans.YamlReader
+import com.esotericsoftware.yamlbeans.YamlWriter
+import java.util.ArrayList
+
+[distZip, distTar].each {
+  task -> configurations.archives.artifacts.removeAll {
+    it.class.simpleName == "ArchivePublishArtifact" && it.archiveTask == task
+  }
+  task.enabled = false
+}
+
+sourceSets {
+  main {
+    java {
+      srcDirs = ["src"]
+    }
+  }
+}
+
+jar {
+    archiveName = "${rootProject.name}.jar"
+}
+
+licenseMain.onlyIf { rootProject.file('LICENSE ').exists() }
+
+mainClassName = "com.app.Main"
+
+task copyfiles  {
+  doLast {
+    YamlReader reader = new YamlReader(new FileReader("gradle/FileCopy.yml"));
+    Object object = reader.read();
+    //System.out.println(object);
+    Map map = (Map)object;
+    //println map
+    ArrayList arrDeployment = (ArrayList)map.keySet();
+
+    arrDeployment.each { iarrDeployment ->
+      if(iarrDeployment.equalsIgnoreCase("Deployment")) {
+        Map mKeys = (Map)map.get(iarrDeployment);
+        ArrayList arrOutputFolder = (ArrayList)mKeys.keySet();
+
+         println arrOutputFolder
+        arrOutputFolder.each { iarrKeys ->
+          if(!(iarrKeys.toString()).contains("Exclude") && !(iarrKeys.toString()).contains("Include")) {
+            ArrayList arrFolder = (ArrayList)mKeys.get(iarrKeys)
+            arrFolder.each { iarrFolder ->
+              def sourcePath = iarrFolder.path
+              def includeFiles = "**/*.*"//iarrFolder.include
+              def excludeFiles = "*.jar"//arrFolder.exclude
+              def narrKeys = (String)iarrKeys
+              doCopy(sourcePath,includeFiles,excludeFiles,narrKeys)
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+def doCopy(String fromPath, String includeFiles , String excludeFiles, String targetFolder) {
+  copy {
+    println "Copying [$targetFolder] :: from :::[$fromPath]  To :: [ $targetFolder/$fromPath]    $includeFiles"
+    from("$fromPath")
+    //into("${buildDir}/Teamsite/${rootProject.name}_src/$path/")
+    into("${buildDir}/app/$targetFolder/${rootProject.name}_src/${fromPath}/")
+    if(includeFiles!= null && includeFiles.length() != 0 ){
+      include("${includeFiles}")
+    }
+
+    if(excludeFiles!= null && excludeFiles.length() != 0 ){
+      include("${excludeFiles}")
+    }
+  }
+}
+
+task ("packageLSDSzip", type:Zip) {
+    destinationDir file("${buildDir}/ZipOutput")
+    archiveName "${rootProject.name}_LSDS.zip"
+    FileTree tree = fileTree("$buildDir/app/LSDS")
+    tree.include "**/*"
+    from tree
+
+    includeEmptyDirs = true
+}
+
+task ("packageWebzip", type:Zip) {
+    destinationDir file("${buildDir}/ZipOutput")
+    archiveName "${rootProject.name}_Web.zip"
+    FileTree tree = fileTree("$buildDir/app/Web")
+    tree.include "**/*"
+    from tree
+
+    includeEmptyDirs = true
+
+}
+
+task ("packageTeamsitezip", type:Zip) {
+
+    destinationDir file("${buildDir}/ZipOutput")
+    archiveName "${rootProject.name}_Teamsite.zip"
+    FileTree tree = fileTree("$buildDir/app/Teamsite")
+    tree.include "**/*"
+    from tree
+
+    includeEmptyDirs = true
+
+}
+
+task collectJars(type: Copy, dependsOn:build){
+    into "$buildDir/libs"
+    from configurations.compile
+}
+
+task printProperties {
+  doLast {
+    println project.version
+    println project.group
+    println project.name
+  }
+}
+
+task("zip", type: Zip, group: "release") {
+    from "${buildDir}/ZipOutput"
+}
+
+task("pack", group: "release") {
+  doLast {
+    tasks."zip".execute()
+  }
+}
+
+defaultTasks 'clean','collectJars', 'copyfiles', 'packageLSDSzip', 'packageWebzip', 'packageTeamsitezip', 'pack'

@@ -1,0 +1,53 @@
+apply plugin: 'pl.allegro.tech.build.axion-release'
+
+scmVersion {
+  repository { // Repository
+    type = 'git' // type of repository
+    directory = project.rootProject.file('../..') // repository location
+    remote = 'origin' // remote name
+    pushTagsOnly = true
+  }
+
+  tag {
+    prefix = "${rootProject.name}"
+  }
+
+  // Incrementing policy
+  versionIncrementer 'incrementPatch'  //default
+  branchVersionIncrementer = [
+     'master': 'incrementMajor',
+     'release/.*': 'incrementMajor',
+     'hotfix/.*': 'incrementMajor',
+     'integration/.*': 'incrementMinor',
+     'dev/.*': 'incrementPatch',
+     'feature/.*': 'incrementPatch'
+  ]
+
+  // Decorators
+  versionCreator 'simple'
+
+  localOnly = true  //no pushing to remote
+
+  // Pre-release checks
+  checks {
+      uncommittedChanges = false // permanently disable uncommitted changes check
+      aheadOfRemote = false // permanently disable ahead of remote check
+  }
+
+}
+
+project.version = scmVersion.version
+
+publishing {
+  publications {
+    nebula(MavenPublication) { // if maven-publish is applied
+      artifact source: zip, extension: 'zip'
+    }
+  }
+  repositories {
+    mavenCentral()
+    mavenLocal()
+  }
+}
+
+// tasks.release.finalizedBy tasks.publish

@@ -1,0 +1,37 @@
+FROM openjdk:8-jdk-alpine
+MAINTAINER Phaneendra <phaneendra@gmail.com>
+
+ARG http_proxy=""
+ARG https_proxy=""
+ARG proxy_auth=""
+
+# Gradle
+ENV GRADLE_VERSION 4.0
+ENV http_proxy $http_proxy
+ENV https_proxy $https_proxy
+ENV HTTP_PROXY_AUTH $proxy_auth
+
+RUN echo "Printing Environment" && env
+RUN mkdir -p /opt/jboss \
+    && adduser -D -h /opt/jboss jboss \
+    && apk update \
+    && apk add curl \
+    && rm -rf /var/cache/apk/*
+
+RUN cd /usr/lib \
+ && curl -O https://downloads.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip \
+ && unzip "gradle-${GRADLE_VERSION}-bin.zip" \
+ && ln -s "/usr/lib/gradle-${GRADLE_VERSION}/bin/gradle" /usr/bin/gradle \
+ && rm "gradle-${GRADLE_VERSION}-bin.zip"
+
+# Set Appropriate Environmental Variables
+ENV GRADLE_HOME /usr/lib/gradle
+ENV PATH $PATH:$GRADLE_HOME/bin
+
+COPY . /app
+
+# Default command is "/usr/bin/gradle -version" on /app dir
+# (ie. Mount project at /app "docker --rm -v /path/to/app:/app gradle <command>")
+WORKDIR /app
+ENTRYPOINT ["gradle"]
+CMD ["-version"]

@@ -1,30 +1,30 @@
 version: '3'
 
 volumes:
-  www-volume:
+  app-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /Users/phaneendra/work/dockerfiles/data/www
-  jboss-volume:
+      device: ${WORKDIR}/dockerfiles/data/deployments
+  web-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /Users/phaneendra/work/dockerfiles/data/jboss
-  nginx-volume:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: /Users/phaneendra/work/dockerfiles/nginx
+      device: ${WORKDIR}/dockerfiles/data/www
   logs-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /Users/phaneendra/work/dockerfiles/logs
+      device: ${WORKDIR}/dockerfiles/data/logs
+  db-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${WORKDIR}/dockerfiles/data/dbdata
 
 services:
   dns:
@@ -38,47 +38,63 @@ services:
       - NET_ADMIN
     command: ["--address=/dev/127.0.0.1"]
 
-  dockergen:
-    container_name: dockergen
-    image: jwilder/docker-gen
-    command: -notify-sighup web -watch /etc/docker-gen/templates/nginx.tmpl /etc/nginx/sites-enabled/default.conf
-    volumes:
-      - nginx-volume:/etc/nginx
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./nginx/template/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
-
   web:
     container_name: web
-    image: nginx:alpine
+    build:
+      context: ./dockerfiles/nginx
+      args:
+        http_proxy: ${PROXY_URL}
+        https_proxy: ${PROXY_URL}
+        proxy_auth: ${PROXY_AUTH}
     restart: 'always'
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - nginx-volume:/etc/nginx
       - logs-volume:/logs
-      - www-volume:/usr/share/nginx/html
-    command: "nginx -g 'daemon off;'"
-    depends_on:
-      - dockergen
+      - web-volume:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
 
   jboss:
     container_name: jboss
-    build: ./jboss
+    build:
+      context: ./dockerfiles/jboss
+      args:
+        http_proxy: ${PROXY_URL}
+        https_proxy: ${PROXY_URL}
+        proxy_auth: ${PROXY_AUTH}
     ports:
       - "8080:8080"
       - "9990:9990"
     environment:
       - VIRTUAL_HOST=jboss.dev
     volumes:
-      - jboss-volume:/opt/jboss/standalone/deployments
+      - app-volume:/opt/jboss/standalone/deployments
       - logs-volume:/logs
     depends_on:
       - web
 
-  whoami:
-    image: jwilder/whoami
+  gradle:
+    container_name: gradle
+    build:
+      context: ./dockerfiles/gradle
+      args:
+        http_proxy: ${PROXY_URL}
+        https_proxy: ${PROXY_URL}
+        proxy_auth: ${PROXY_AUTH}
     environment:
-      - VIRTUAL_HOST=whoami.dev
-    depends_on:
-      - dockergen
+      - VIRTUAL_HOST=gradle.dev
+    volumes:
+      - app-volume:/usr/bin/app
+      - logs-volume:/logs
+
+  db:
+    container_name: mysql
+    image: mysql:5.6.36
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+        - db-volume:/var/lib/mysql

@@ -1,0 +1,17 @@
+// Executed in context of buildscript
+repositories {
+  // Repo in addition to maven central
+  // repositories {
+  //   mavenCentral()
+  // }
+}
+dependencies {
+  classpath "pl.allegro.tech.build:axion-release-plugin:1.6.0"
+  classpath "com.netflix.nebula:nebula-project-plugin:3.3.0"
+  classpath "nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0"
+  classpath "com.mapvine:gradle-cobertura-plugin:0.1"
+  classpath group: 'org.yaml', name: 'snakeyaml', version: '1.8'
+  classpath group: 'com.fasterxml.jackson.dataformat',name: 'jackson-dataformat-yaml', version:'2.7.4'
+  classpath group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version: '1.08'
+  classpath "pl.softmate:gradle-properties-yaml-plugin:0.0.2"
+}
