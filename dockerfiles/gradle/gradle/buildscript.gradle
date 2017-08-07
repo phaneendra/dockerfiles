@@ -1,17 +1,39 @@
 // Executed in context of buildscript
+ext {
+  springBootVersion = '1.5.4.RELEASE'
+}
 repositories {
   // Repo in addition to maven central
-  // repositories {
-  //   mavenCentral()
-  // }
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven { url "http://repo.spring.io/plugins-release" }
+    maven { url "http://repo.spring.io/milestone" }
+    maven { url "https://plugins.gradle.org/m2/" }
+  }
 }
 dependencies {
-  classpath "pl.allegro.tech.build:axion-release-plugin:1.6.0"
-  classpath "com.netflix.nebula:nebula-project-plugin:3.3.0"
-  classpath "nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0"
-  classpath "com.mapvine:gradle-cobertura-plugin:0.1"
-  classpath group: 'org.yaml', name: 'snakeyaml', version: '1.8'
-  classpath group: 'com.fasterxml.jackson.dataformat',name: 'jackson-dataformat-yaml', version:'2.7.4'
+  // Nebula project plugin dependencies for common project conventions
+  classpath("com.netflix.nebula:nebula-project-plugin:3.3.0")
+
+  // Axion release plugin dependencies for semantic release versioning
+  classpath("pl.allegro.tech.build:axion-release-plugin:1.6.0")
+
+  // License plugin dependencies for adding License headers
+  classpath("nl.javadude.gradle.plugins:license-gradle-plugin:0.10.0")
+
+  // cobertura code coverage plugin dependencies
+  classpath("com.mapvine:gradle-cobertura-plugin:0.1")
+
+  // Spring boot plugin dependencies
+  classpath("org.springframework.boot:spring-boot-gradle-plugin:${spring_boot_version}")
+  classpath("org.springframework.build.gradle:propdeps-plugin:0.0.7")
+
+  // nodejs plugin dependencies
+  classpath("com.moowork.gradle:gradle-node-plugin:1.2.0")
+
+  // yaml files
   classpath group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version: '1.08'
-  classpath "pl.softmate:gradle-properties-yaml-plugin:0.0.2"
+
 }

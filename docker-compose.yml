@@ -1,30 +1,36 @@
 version: '3'
 
 volumes:
-  app-volume:
+  src-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ${WORKDIR}/dockerfiles/data/deployments
+      device: ${WORKDIR}/src
   web-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ${WORKDIR}/dockerfiles/data/www
+      device: ${WORKDIR}/www
+  app-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${WORKDIR}/build/distribution
   logs-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ${WORKDIR}/dockerfiles/data/logs
+      device: ${WORKDIR}/data/logs
   db-volume:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: ${WORKDIR}/dockerfiles/data/dbdata
+      device: ${WORKDIR}/data/dbdata
 
 services:
   dns:
@@ -85,7 +91,8 @@ services:
     environment:
       - VIRTUAL_HOST=gradle.dev
     volumes:
-      - app-volume:/usr/bin/app
+      - src-volume:/app/src
+      - ./build.gradle:/app/build.gradle
       - logs-volume:/logs
 
   db:

@@ -1,0 +1,11 @@
+apply plugin: 'org.springframework.boot'
+
+apply plugin: 'propdeps'
+
+apply plugin: 'io.spring.dependency-management'
+
+springBoot {
+    mainClass = 'io.github.jhipster.sample.JhipsterGradleSampleApplicationApp'
+    executable = true
+    buildInfo()
+}

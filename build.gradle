@@ -1,20 +1,12 @@
 
 buildscript {
-  ext {
-    springBootVersion = '1.3.2.RELEASE'
-  }
-  repositories {
-    mavenCentral()
-  }
   apply from: file('gradle/buildscript.gradle'), to: buildscript
 }
 
 // invoke the plugin
-apply plugin: 'application'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'groovy'
-apply plugin: 'pl.softmate.gradle-properties-yaml-plugin'
 
 // Establish version and status
 group = "com.${rootProject.name}"
@@ -29,8 +21,19 @@ repositories {
 
 //Project dependencies from Maven Repo
 dependencies {
-  compileOnly group: 'org.jasypt', name: 'jasypt', version: '1.9.0'
-  compileOnly group: 'org.jasypt', name: 'jasypt-hibernate3', version: '1.9.0'
+  compile 'org.springframework.boot:spring-boot-devtools'
+  compile 'org.springframework.boot:spring-boot-starter-web'
+  compile 'org.codehaus.groovy:groovy'
+  compile 'org.zeroturnaround:zt-exec:1.9'
+
+  compile 'org.springframework.boot:spring-boot-starter-security'
+  compile 'org.springframework.session:spring-session'
+  compile 'org.springframework.boot:spring-boot-starter-redis'
+
+  testCompile 'org.springframework.boot:spring-boot-starter-test'
+  testCompile 'org.springframework.security:spring-security-test'
+  testCompile 'org.spockframework:spock-spring'
+  testCompile 'com.geowarin:spring-spock-mvc:0.2.1'
 }
 
 apply from: file('gradle/convention.gradle')
@@ -38,10 +41,8 @@ apply from: file('gradle/check.gradle')
 apply from: file('gradle/license.gradle')
 apply from: file('gradle/release.gradle')
 
-import org.yaml.snakeyaml.Yaml
-import com.esotericsoftware.yamlbeans.YamlConfig
+
 import com.esotericsoftware.yamlbeans.YamlReader
-import com.esotericsoftware.yamlbeans.YamlWriter
 import java.util.ArrayList
 
 [distZip, distTar].each {
@@ -60,7 +61,7 @@ sourceSets {
 }
 
 jar {
-    archiveName = "${rootProject.name}.jar"
+  archiveName = "${rootProject.name}.jar"
 }
 
 licenseMain.onlyIf { rootProject.file('LICENSE ').exists() }

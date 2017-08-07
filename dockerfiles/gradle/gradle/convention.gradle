@@ -2,6 +2,9 @@ apply plugin: 'java' // Plugin as major conventions, overwrites status
 
 apply plugin: 'nebula.project' // <2>
 
+apply plugin: 'maven'
+apply plugin: 'groovy'
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
