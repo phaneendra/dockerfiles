@@ -1,0 +1,28 @@
+FROM node:alpine
+
+MAINTAINER Phaneendra <phaneendra@gmail.com>
+
+ARG http_proxy=""
+ARG https_proxy=""
+ARG proxy_auth=""
+
+ENV http_proxy $http_proxy
+ENV https_proxy $https_proxy
+ENV HTTP_PROXY_AUTH $proxy_auth
+
+USER root
+RUN mkdir -p /opt/app \
+    && adduser -D -h /opt/app app \
+    && apk update \
+    && apk add curl \
+    && rm -rf /var/cache/apk/*
+
+USER app
+WORKDIR /opt/app
+VOLUME /opt/app
+
+COPY ./entrypoint.sh entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+EXPOSE 3000
+CMD ["npm", "start"]

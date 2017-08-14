@@ -1,0 +1,30 @@
+version: '3'
+
+volumes:
+  src-volume:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${WORKDIR}/src
+
+services:
+  node:
+    container_name: nodejs
+    build:
+      context: ${WORKDIR}/dockerfiles/nodejs
+      args:
+        http_proxy: ${PROXY_URL}
+        https_proxy: ${PROXY_URL}
+        proxy_auth: ${PROXY_AUTH}
+    ports:
+      - "3000:3000"
+    environment:
+      - VIRTUAL_HOST=nodejs.dev
+      - NODE_ENV=production
+    volumes:
+      - src-volume:/app/src
+      - logs-volume:/logs
+    depends_on:
+      - web
+      - dns
