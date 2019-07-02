@@ -1,0 +1,26 @@
+version: "3.7"
+
+networks:
+  homenet:
+
+services:
+  portainer:
+    image: portainer/portainer
+    restart: always
+    networks:
+      - homenet
+    ports:
+      - 9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    labels:
+      - "traefik.backend=portainer"
+      - "traefik.frontend.rule=Host:portainer.docker.localhost"
+      - "traefik.docker.network=homenet"
+      - "traefik.enable=true"
+      - "traefik.port=9000"
+      - "traefik.default.protocol=http"
+
+volumes:
+  portainer_data: {}
