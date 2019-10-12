@@ -6,33 +6,34 @@ networks:
       name: traefik_homenet
 
 volumes:
-  portainer_data:
-    external:
-      name: portainer_data
   shared_data:
     external:
       name: shared_data
 
 services:
-  portainer:
-    image: portainer/portainer
-    container_name: portainer
+  jackett:
+    image: "linuxserver/jackett"
+    container_name: "jackett"
+    volumes:
+      - ${USERDIR}/data/jackett:/config
+      - ${USERDIR}/Downloads/completed:/downloads
+      - "/etc/localtime:/etc/localtime:ro"
+      - shared_data:/shared
+    ports:
+      - "9117:9117"
     restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     networks:
       - traefik_homenet
-    environment:
-      - TZ=${TZ}
-    ports:
-      - 9000
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-      - shared_data:/work
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=portainer"
-      - "traefik.frontend.rule=Host:portainer.${DOMAINNAME}"
-      - "traefik.port=9000"
+      - "traefik.backend=jackett"
+      - "traefik.frontend.rule=Host:jackett.${DOMAINNAME}"
+      - "traefik.port=9117"
+      - "traefik.protocol=http"
       - "traefik.docker.network=traefik_homenet"
       - "traefik.frontend.headers.SSLRedirect=true"
       - "traefik.frontend.headers.STSSeconds=315360000"
@@ -43,4 +44,3 @@ services:
       - "traefik.frontend.headers.STSIncludeSubdomains=true"
       - "traefik.frontend.headers.STSPreload=true"
       - "traefik.frontend.headers.frameDeny=true"
-    command: -H unix:///var/run/docker.sock

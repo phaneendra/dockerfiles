@@ -1,0 +1,28 @@
+version: "3.7"
+
+networks:
+  traefik_homenet:
+    external:
+      name: traefik_homenet
+
+volumes:
+  shared_data:
+    external:
+      name: shared_data
+
+services:
+  portainer:
+    image: linuxserver/ddclient
+    container_name: ddclient
+    restart: unless-stopped
+    networks:
+      - traefik_homenet
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - $PWD/config/:/config
+      - shared_data:/work
+    labels:
+      - "traefik.enable=false"

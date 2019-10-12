@@ -1,0 +1,19 @@
+version: "3.7"
+
+networks:
+  traefik_homenet:
+    external:
+      name: traefik_homenet
+
+services:
+  hugo:
+    image: jojomi/hugo:latest
+    container_name: hugo
+    volumes:
+      - ${HUGO_SRCDIR}:/src
+      - ${HUGO_OUTPUTDIR}:/output
+    environment:
+      - HUGO_REFRESH_TIME=3600
+      - HUGO_THEME=academic
+      - HUGO_BASEURL=${DOMAINNAME}
+    restart: always

@@ -1,17 +1,24 @@
+#debug = false
+logLevel = "INFO"
+InsecureSkipVerify = true 
+
 # Set default entrypoints
-defaultEntryPoints = ["http", "https"]
+defaultEntryPoints = ["https"]
 
 checkNewVersion = true
 MaxIdleConnsPerHost = 500
-logLevel = "INFO"
 sendAnonymousUsage = true
 
 # Launch API
 [api]
+  entryPoint = "traefik"
+  dashboard = true
+  address = ":8080"
 
 # Connect to Docker host to get the running docker instances
 [docker]
-  domain = "docker.localhost"
+  endpoint = "unix:///var/run/docker.sock"
+  domain = "phanee.tk"
   watch = true
   exposedByDefault = false
 
@@ -27,18 +34,24 @@ storage = "/etc/traefik/acme/acme.json"
 entryPoint = "https"
 OnHostRule = true
 acmeLogging = true
-  [acme.DNSChallenge]
+onDemand = false #create certificate when container is created
+[acme.DNSChallenge]
   provider = "cloudflare"
-
+  delayBeforeCheck = 300
+[[acme.domains]]
+  main = "phanee.tk"
 # Request wildcard domain TLS
 [[acme.domains]]
-  main = "*.fqdn.com"
+  main = "*.phanee.tk"
 
 # Run on those ports
+# Force HTTPS
 [entryPoints]
   [entryPoints.http]
   address = ":80"
   compress = true
+    [entryPoint.http.redirect]
+    entryPoint = "https"
   [entryPoints.https]
   address = ":443"
   compress = true

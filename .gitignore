@@ -2,6 +2,8 @@
 # Project Specific
 # ========================================================
 data/
+ddclient/config/ddclient.conf
+traefik/config/acme/acme.json
 
 # ========================================================
 # Java

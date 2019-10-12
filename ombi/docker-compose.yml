@@ -6,33 +6,32 @@ networks:
       name: traefik_homenet
 
 volumes:
-  portainer_data:
-    external:
-      name: portainer_data
   shared_data:
     external:
       name: shared_data
 
 services:
-  portainer:
-    image: portainer/portainer
-    container_name: portainer
+  ombi:
+    container_name: ombi
     restart: always
+    image: linuxserver/ombi
+    volumes:
+      - ${USERDIR}/data/ombi:/config
+      - shared_data:/shared
+    ports:
+      - "3579:3579"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
     networks:
       - traefik_homenet
-    environment:
-      - TZ=${TZ}
-    ports:
-      - 9000
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-      - shared_data:/work
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=portainer"
-      - "traefik.frontend.rule=Host:portainer.${DOMAINNAME}"
-      - "traefik.port=9000"
+      - "traefik.backend=ombi"
+      - "traefik.frontend.rule=Host:ombi.${DOMAINNAME}"
+      - "traefik.port=3579"
+      - "traefik.protocol=http"
       - "traefik.docker.network=traefik_homenet"
       - "traefik.frontend.headers.SSLRedirect=true"
       - "traefik.frontend.headers.STSSeconds=315360000"
@@ -43,4 +42,3 @@ services:
       - "traefik.frontend.headers.STSIncludeSubdomains=true"
       - "traefik.frontend.headers.STSPreload=true"
       - "traefik.frontend.headers.frameDeny=true"
-    command: -H unix:///var/run/docker.sock

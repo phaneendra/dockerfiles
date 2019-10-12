@@ -1,0 +1,28 @@
+# Docker stage we'll use later for the CLI
+FROM ubuntu:18.04 AS docker
+
+RUN apt-get update && apt-get install -y \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  gnupg-agent \
+  software-properties-common
+
+#
+# Install Docker CE CLI
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+  apt-get update && \
+  apt-get install -y docker-ce-cli
+
+# Install Docker Compose
+RUN curl -sSL "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+  && chmod +x /usr/local/bin/docker-compose
+
+FROM codercom/code-server
+
+USER coder
+WORKDIR /home/coder/project
+
+COPY --from=docker /usr/bin/docker /usr/local/bin/docker
+COPY --from=docker /usr/local/bin/docker-compose /usr/local/bin/docker-compose

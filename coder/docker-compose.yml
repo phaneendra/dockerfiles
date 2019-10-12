@@ -6,41 +6,42 @@ networks:
       name: traefik_homenet
 
 volumes:
-  portainer_data:
-    external:
-      name: portainer_data
   shared_data:
     external:
       name: shared_data
 
 services:
-  portainer:
-    image: portainer/portainer
-    container_name: portainer
-    restart: always
-    networks:
-      - traefik_homenet
-    environment:
-      - TZ=${TZ}
-    ports:
-      - 9000
+  coder:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: "coder"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-      - shared_data:/work
+      - shared_data:/home/coder/project
+    ports:
+      - "8443"
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    command: code-server --allow-http --trust-proxy
+    networks:
+      - traefik_homenet
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=portainer"
-      - "traefik.frontend.rule=Host:portainer.${DOMAINNAME}"
-      - "traefik.port=9000"
+      - "traefik.backend=coder"
+      - "traefik.frontend.rule=Host:coder.${DOMAINNAME}"
+      - "traefik.port=8443"
+      - "traefik.protocol=http"
       - "traefik.docker.network=traefik_homenet"
       - "traefik.frontend.headers.SSLRedirect=true"
       - "traefik.frontend.headers.STSSeconds=315360000"
       - "traefik.frontend.headers.browserXSSFilter=true"
       - "traefik.frontend.headers.contentTypeNosniff=true"
       - "traefik.frontend.headers.forceSTSHeader=true"
-      - "traefik.frontend.headers.SSLHost=example.com"
+      - "traefik.frontend.headers.SSLHost=${DOMAINNAME}"
       - "traefik.frontend.headers.STSIncludeSubdomains=true"
       - "traefik.frontend.headers.STSPreload=true"
       - "traefik.frontend.headers.frameDeny=true"
-    command: -H unix:///var/run/docker.sock

@@ -1,0 +1,40 @@
+######################################################################
+## 
+## Define default global variables with lines like:
+## 	var=value [, var=value]*
+## These values will be used for each following host unless overridden
+## with a local variable definition.
+##
+## Define local variables for one or more hosts with:
+## 	var=value [, var=value]* host.and.domain[,host2.and.domain...]
+##
+## Lines can be continued on the following line by ending the line
+## with a \
+##
+##
+## Warning: not all supported routers or dynamic DNS services 
+##          are mentioned here.
+##
+######################################################################
+
+daemon=300                    # check every 300 seconds
+syslog=yes                    # log update msgs to syslog
+mail=root                     # mail all msgs to root
+mail-failure=root             # mail failed update msgs to root
+pid=/var/run/ddclient.pid     # record PID in file.
+ssl=yes                       # use ssl-support.  Works with
+                              # ssl-library
+#use=ip,                     ip=127.0.0.1   # via static IP's
+#use=if,                     if=eth0        # via interfaces
+#use=web                                    # via web
+
+##
+## CloudFlare (www.cloudflare.com)
+##
+use=web,
+protocol=cloudflare,             \
+zone=${DOMAIN_NAME},             \
+ttl=1                            \
+login=${CLOUDFLARE_USER_NAME},   \
+password=${CLOUDFLARE_PASSWORD}  \
+${DOMAIN_NAME}
